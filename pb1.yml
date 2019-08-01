@@ -1,0 +1,30 @@
+- hosts: all
+  become: yes
+  vars:
+    tg_name: mytg
+     
+  tasks:
+    - name: Gathering ec2 facts
+      action: ec2_metadata_facts
+    - name: deregister target
+      elb_target:
+        target_group_name: "{{ tg_name }}"
+        target_id: "{{ ansible_ec2_instance_id }}"
+        state: absent
+        region: eu-west-2
+       # delegate_to: localhost
+
+    - name: copy the data
+      copy:
+       src: /tmp/demo.txt
+       dest: /var/www/html/index.html
+
+    - name: register target
+      elb_target:
+        target_group_name: "{{ tg_name}}"
+        target_id: "{{ ansible_ec2_instance_id }}"
+        state: present
+        target_status: healthy
+        target_status_timeout: 120
+        region: eu-west-2
+      #  delegate_to: localhost
